@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PhreakMe // DC34 — Executive Summary</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=VT323&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-deep:    #050807;
+    --bg-dark:    #0a0f0d;
+    --bg-panel:   #0e1614;
+    --line:       #1a2a25;
+    --green:      #00ff41;
+    --green-dim:  #18a050;
+    --green-bg:   #00ff411a;
+    --cyan:       #00e5ff;
+    --magenta:    #ff2a8a;
+    --amber:      #ffb700;
+    --red:        #ff3a3a;
+    --text:       #d8ffe6;
+    --text-dim:   #6a907e;
+    --text-faded: #3d5a4a;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    background: var(--bg-deep);
+    color: var(--text);
+    font-family: 'JetBrains Mono', 'IBM Plex Mono', 'Courier New', monospace;
+    font-size: 14px;
+    line-height: 1.55;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* CRT scanlines + vignette overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1000;
+    background:
+      repeating-linear-gradient(
+        180deg,
+        rgba(0,0,0,0) 0px,
+        rgba(0,0,0,0) 2px,
+        rgba(0,255,65,0.025) 3px,
+        rgba(0,0,0,0) 4px
+      ),
+      radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,0.6) 100%);
+  }
+
+  /* Subtle CRT flicker */
+  @keyframes crt-flicker {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.97; }
+  }
+  body { animation: crt-flicker 6s infinite; }
+
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 48px 24px 80px;
+    position: relative;
+    z-index: 2;
+  }
+
+  /* ===== HERO ===== */
+  .hero {
+    border: 1px solid var(--green-dim);
+    background: linear-gradient(180deg, #0a1612 0%, #050807 100%);
+    padding: 28px 32px;
+    margin-bottom: 32px;
+    position: relative;
+    box-shadow: 0 0 40px rgba(0,255,65,0.15), inset 0 0 60px rgba(0,255,65,0.03);
+  }
+  .hero::before {
+    content: '┌';
+    position: absolute; top: -1px; left: -1px;
+    color: var(--green); font-size: 14px; line-height: 1;
+    padding: 2px;
+  }
+  .hero::after {
+    content: '┘';
+    position: absolute; bottom: -1px; right: -1px;
+    color: var(--green); font-size: 14px; line-height: 1;
+    padding: 2px;
+  }
+
+  .hero-bar {
+    display: flex;
+    justify-content: space-between;
+    color: var(--text-dim);
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    border-bottom: 1px dashed var(--line);
+    padding-bottom: 8px;
+    margin-bottom: 24px;
+  }
+  .hero-bar .blink { color: var(--green); animation: blink 1.2s infinite; }
+  @keyframes blink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
+
+  h1.title {
+    font-family: 'VT323', 'JetBrains Mono', monospace;
+    font-size: 96px;
+    line-height: 0.9;
+    color: var(--green);
+    letter-spacing: 2px;
+    text-shadow:
+      0 0 12px rgba(0,255,65,0.55),
+      0 0 32px rgba(0,255,65,0.25);
+    position: relative;
+    display: inline-block;
+  }
+  /* RGB-split glitch */
+  h1.title::before, h1.title::after {
+    content: attr(data-text);
+    position: absolute; top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+  }
+  h1.title::before {
+    color: var(--magenta);
+    transform: translate(-2px, 0);
+    mix-blend-mode: screen;
+    opacity: 0.7;
+    animation: glitch-1 4s infinite;
+  }
+  h1.title::after {
+    color: var(--cyan);
+    transform: translate(2px, 0);
+    mix-blend-mode: screen;
+    opacity: 0.7;
+    animation: glitch-2 4s infinite;
+  }
+  @keyframes glitch-1 {
+    0%, 88%, 100% { transform: translate(-1px, 0); }
+    89% { transform: translate(-3px, 1px); }
+    91% { transform: translate(2px, -1px); }
+    93% { transform: translate(-2px, 0); }
+  }
+  @keyframes glitch-2 {
+    0%, 88%, 100% { transform: translate(1px, 0); }
+    90% { transform: translate(3px, 1px); }
+    92% { transform: translate(-2px, -1px); }
+    94% { transform: translate(2px, 0); }
+  }
+
+  .subtitle {
+    margin-top: 10px;
+    color: var(--cyan);
+    font-size: 15px;
+    letter-spacing: 1.5px;
+  }
+  .subtitle .sep { color: var(--text-faded); margin: 0 12px; }
+
+  .tagline {
+    margin-top: 24px;
+    font-size: 16px;
+    line-height: 1.7;
+    color: var(--text);
+    max-width: 720px;
+  }
+  .tagline strong { color: var(--green); font-weight: 700; }
+  .tagline em { color: var(--magenta); font-style: normal; }
+
+  /* ===== SECTION ===== */
+  .section { margin-top: 40px; }
+
+  .section-head {
+    display: flex; align-items: baseline; gap: 14px;
+    margin-bottom: 18px;
+    color: var(--green);
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+  .section-head .prompt { color: var(--magenta); }
+  .section-head .rule {
+    flex: 1;
+    border-top: 1px dashed var(--line);
+    margin-bottom: 6px;
+  }
+  .section-head .id {
+    color: var(--text-faded);
+    font-size: 12px;
+  }
+
+  /* ===== GRID OF STATS ===== */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+  .stat {
+    background: var(--bg-panel);
+    border: 1px solid var(--line);
+    padding: 18px 16px;
+    text-align: center;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .stat:hover {
+    border-color: var(--green-dim);
+    box-shadow: 0 0 24px rgba(0,255,65,0.15);
+  }
+  .stat .num {
+    font-size: 32px;
+    font-weight: 800;
+    color: var(--cyan);
+    text-shadow: 0 0 12px rgba(0,229,255,0.4);
+    display: block;
+    margin-bottom: 4px;
+  }
+  .stat .lbl {
+    font-size: 10px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+  }
+
+  /* ===== TWO-COL ===== */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+
+  .panel {
+    background: var(--bg-panel);
+    border: 1px solid var(--line);
+    padding: 20px 22px;
+    position: relative;
+  }
+  .panel h3 {
+    color: var(--cyan);
+    font-size: 14px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .panel p { color: var(--text); margin-bottom: 10px; }
+  .panel p:last-child { margin-bottom: 0; }
+  .panel strong { color: var(--green); font-weight: 600; }
+  .panel code {
+    background: var(--bg-deep);
+    color: var(--amber);
+    padding: 1px 6px;
+    border: 1px solid var(--line);
+    font-size: 13px;
+  }
+
+  /* ===== CHALLENGE GRID ===== */
+  .challenges {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+  .chall {
+    background: var(--bg-panel);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--green-dim);
+    padding: 14px 14px 12px;
+    position: relative;
+    transition: all 0.15s;
+  }
+  .chall:hover {
+    border-left-color: var(--magenta);
+    background: #0f1a17;
+  }
+  .chall .idx {
+    position: absolute; top: 6px; right: 8px;
+    color: var(--text-faded);
+    font-size: 10px;
+  }
+  .chall .name {
+    color: var(--green);
+    font-weight: 700;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+  }
+  .chall .diff {
+    font-size: 9px;
+    color: var(--text-dim);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .chall .desc { font-size: 12px; color: var(--text); line-height: 1.45; }
+  .chall.expert { border-left-color: var(--red); }
+  .chall.expert .diff { color: var(--red); }
+  .chall.hard { border-left-color: var(--amber); }
+  .chall.hard .diff { color: var(--amber); }
+  .chall.med { border-left-color: var(--cyan); }
+  .chall.med .diff { color: var(--cyan); }
+
+  /* ===== KEYPAD ===== */
+  .keypad-row { display: flex; gap: 20px; align-items: stretch; }
+  .keypad {
+    flex: 0 0 auto;
+    background: var(--bg-panel);
+    border: 1px solid var(--line);
+    padding: 16px;
+  }
+  .keypad-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 56px);
+    gap: 6px;
+  }
+  .key {
+    background: linear-gradient(180deg, #1a2a25 0%, #0a1612 100%);
+    border: 1px solid var(--green-dim);
+    color: var(--green);
+    text-align: center;
+    padding: 12px 0;
+    font-size: 18px;
+    font-weight: 700;
+    cursor: default;
+    box-shadow: inset 0 1px 0 rgba(0,255,65,0.15);
+    transition: all 0.1s;
+  }
+  .key:hover {
+    background: linear-gradient(180deg, #2a4a3d 0%, #1a2a25 100%);
+    box-shadow: 0 0 14px rgba(0,255,65,0.4);
+  }
+  .key .freq {
+    display: block;
+    font-size: 8px;
+    color: var(--text-faded);
+    margin-top: 2px;
+    letter-spacing: 0;
+  }
+  .key.special {
+    background: linear-gradient(180deg, #2a1a25 0%, #150810 100%);
+    border-color: var(--magenta);
+    color: var(--magenta);
+  }
+  .keypad-label {
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 10px;
+    margin-top: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  /* ===== NEEDS LIST ===== */
+  .needs {
+    flex: 1;
+    background: var(--bg-panel);
+    border: 1px solid var(--line);
+    padding: 18px 22px;
+  }
+  .needs h3 {
+    color: var(--cyan);
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 14px;
+    border-bottom: 1px dashed var(--line);
+    padding-bottom: 8px;
+  }
+  .needs ul { list-style: none; }
+  .needs li {
+    padding: 5px 0;
+    color: var(--text);
+    display: flex;
+    gap: 10px;
+  }
+  .needs li::before {
+    content: '▶';
+    color: var(--green);
+    font-size: 9px;
+    flex: 0 0 12px;
+    padding-top: 5px;
+  }
+  .needs li strong {
+    color: var(--green);
+    font-weight: 600;
+    white-space: nowrap;
+    margin-right: 6px;
+  }
+  .needs li em { color: var(--amber); font-style: normal; font-size: 12px; }
+
+  /* ===== STEPS ===== */
+  .steps {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+    counter-reset: step;
+  }
+  .step {
+    background: var(--bg-panel);
+    border: 1px solid var(--line);
+    padding: 16px 14px 14px;
+    position: relative;
+    counter-increment: step;
+  }
+  .step::before {
+    content: '0' counter(step);
+    position: absolute;
+    top: -10px; left: 10px;
+    background: var(--bg-deep);
+    color: var(--magenta);
+    padding: 0 6px;
+    font-size: 11px;
+    letter-spacing: 2px;
+    border: 1px solid var(--magenta);
+  }
+  .step h4 {
+    color: var(--green);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin: 6px 0 6px;
+  }
+  .step p {
+    font-size: 11px;
+    color: var(--text-dim);
+    line-height: 1.5;
+  }
+
+  /* ===== FOOTER ===== */
+  .footer {
+    margin-top: 56px;
+    padding-top: 20px;
+    border-top: 1px dashed var(--line);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: var(--text-faded);
+    font-size: 11px;
+    letter-spacing: 1.5px;
+  }
+  .footer .left { color: var(--text-dim); }
+  .footer .blink-cursor::after {
+    content: '█';
+    color: var(--green);
+    animation: blink 0.8s infinite;
+    margin-left: 4px;
+  }
+  .footer a { color: var(--cyan); text-decoration: none; }
+  .footer a:hover { text-decoration: underline; color: var(--green); }
+
+  /* ===== TAGLINE BOX ===== */
+  .signal-box {
+    margin-top: 32px;
+    padding: 20px;
+    background: linear-gradient(90deg, rgba(255,42,138,0.08) 0%, transparent 100%);
+    border-left: 3px solid var(--magenta);
+    font-size: 14px;
+    color: var(--text);
+  }
+  .signal-box .label {
+    color: var(--magenta);
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  /* ===== ASCII PHONE ===== */
+  .phone-art {
+    color: var(--green);
+    font-family: 'VT323', monospace;
+    font-size: 15px;
+    line-height: 1.05;
+    white-space: pre;
+    text-shadow: 0 0 8px rgba(0,255,65,0.4);
+    margin-top: 24px;
+    opacity: 0.6;
+  }
+
+  /* Responsive */
+  @media (max-width: 900px) {
+    h1.title { font-size: 64px; }
+    .stats, .challenges { grid-template-columns: repeat(2, 1fr); }
+    .two-col, .keypad-row { grid-template-columns: 1fr; display: block; }
+    .keypad-row .keypad { margin-bottom: 16px; }
+    .steps { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 520px) {
+    h1.title { font-size: 44px; }
+    .stats, .challenges, .steps { grid-template-columns: 1fr; }
+    .container { padding: 24px 14px; }
+  }
+
+  @media print {
+    body::before { display: none; }
+    body { background: #fff; color: #000; animation: none; }
+    .hero, .panel, .stat, .chall, .step, .needs, .keypad {
+      background: #fff; border-color: #999;
+    }
+    h1.title { color: #000; text-shadow: none; }
+    h1.title::before, h1.title::after { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- ===== HERO ===== -->
+  <section class="hero">
+    <div class="hero-bar">
+      <span>// PHREAKTEL.CORP <span class="blink">●</span> SECURE TERMINAL</span>
+      <span>DC34 // 2026 // EXEC BRIEF</span>
+    </div>
+    <h1 class="title" data-text="PHREAKME">PHREAKME</h1>
+    <div class="subtitle">
+      [ DEF CON 34 ]<span class="sep">//</span>[ TELEPHONY CTF ]<span class="sep">//</span>[ AUG 2026 · LAS VEGAS ]
+    </div>
+    <p class="tagline">
+      A <strong>4-day phone phreaking CTF</strong> at DEF CON. You dial a real phone number, exploit a
+      <em>period-accurate 1990s phone switch</em>, hack voicemail, blue-box trunk lines with
+      <strong>2600 Hz</strong>, and grind a BBS door game called BadgeLife. It's not code. It's
+      <em>analog signaling</em>, social engineering, and corporate OSINT against a fake telco called
+      <strong>PhreakTel</strong>. It's the most tactile contest at DEF CON.
+    </p>
+  </section>
+
+  <!-- ===== STATS ===== -->
+  <section class="section">
+    <div class="section-head">
+      <span class="prompt">&gt;</span> DC33 // BY THE NUMBERS
+      <span class="rule"></span>
+      <span class="id">[001]</span>
+    </div>
+    <div class="stats">
+      <div class="stat"><span class="num">5,244</span><span class="lbl">Total Calls</span></div>
+      <div class="stat"><span class="num">39</span><span class="lbl">Teams on BBS</span></div>
+      <div class="stat"><span class="num">4 / 39</span><span class="lbl">Beat BadgeLife</span></div>
+      <div class="stat"><span class="num">$170</span><span class="lbl">Payphone Charges</span></div>
+    </div>
+  </section>
+
+  <!-- ===== WHAT IT IS ===== -->
+  <section class="section">
+    <div class="section-head">
+      <span class="prompt">&gt;</span> WHAT IT IS
+      <span class="rule"></span>
+      <span class="id">[002]</span>
+    </div>
+    <div class="two-col">
+      <div class="panel">
+        <h3>The Setup</h3>
+        <p>
+          <strong>PhreakTel</strong> is a fictional 1996-era telco. The website is a loving recreation
+          of an early ISP — stock ticker, press releases, employee directory, corporate lore. The
+          phone system is a <strong>modified Asterisk PBX</strong> behaving like a vintage NYNEX
+          switch.
+        </p>
+        <p>
+          You dial a real, routable phone number (published at contest start). It's live 24/7 across
+          all 4 days. <strong>Physical payphones</strong> in the village. <strong>Real charges</strong>
+          when you use them.
+        </p>
+      </div>
+      <div class="panel">
+        <h3>Why It's Cool</h3>
+        <p>
+          Modern phone networks use <strong>out-of-band</strong> signaling (SS7). Old networks used
+          <strong>in-band</strong> — control tones travel in the voice channel. Send the right tone,
+          take the call.
+        </p>
+        <p>
+          The challenge replicates this <em>on purpose</em>. You're not hacking a vulnerability.
+          You're learning the <strong>fundamental architecture</strong> of pre-1990s telecom — and
+          DEF CON's namesake culture grew out of this exact thing.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== CHALLENGE CATEGORIES ===== -->
+  <section class="section">
+    <div class="section-head">
+      <span class="prompt">&gt;</span> 8 CHALLENGE CATEGORIES
+      <span class="rule"></span>
+      <span class="id">[003]</span>
+    </div>
+    <div class="challenges">
+      <div class="chall med">
+        <span class="idx">01</span>
+        <div class="name">Trivia</div>
+        <div class="diff">EASY · OSINT</div>
+        <div class="desc">DTMF answers to PhreakTel corporate trivia. Answers are on the website.</div>
+      </div>
+      <div class="chall med">
+        <span class="idx">02</span>
+        <div class="name">Voicemail</div>
+        <div class="diff">MEDIUM</div>
+        <div class="desc">Ext 7777. Default passwords, mailbox enum, helpdesk SE (ext 1337).</div>
+      </div>
+      <div class="chall hard">
+        <span class="idx">03</span>
+        <div class="name">Redboxing</div>
+        <div class="diff">HARD · TIMING</div>
+        <div class="desc">Fake coin deposit tones — 1700 Hz pulses, 60ms. Spoof payphones.</div>
+      </div>
+      <div class="chall hard">
+        <span class="idx">04</span>
+        <div class="name">Blueboxing</div>
+        <div class="diff">HARD · MF TONES</div>
+        <div class="desc">2600 Hz seizes the trunk. KP + digits + ST routes a call. ±1.5% tolerance.</div>
+      </div>
+      <div class="chall hard">
+        <span class="idx">05</span>
+        <div class="name">VoIP Enum</div>
+        <div class="diff">HARD · NETWORK</div>
+        <div class="desc">SIPVicious svmap/svwar. Find extensions, map the Asterisk dialplan.</div>
+      </div>
+      <div class="chall hard">
+        <span class="idx">06</span>
+        <div class="name">Social Eng.</div>
+        <div class="diff">HARD · PEOPLE</div>
+        <div class="desc">Helpdesk impersonation. Possibly an AI agent (ElevenLabs-style).</div>
+      </div>
+      <div class="chall expert">
+        <span class="idx">07</span>
+        <div class="name">BBS / BadgeLife</div>
+        <div class="diff">EXPERT · TIME-GATED</div>
+        <div class="desc">Door game on Synchronet BBS. Only 4 of 39 teams finished it at DC33.</div>
+      </div>
+      <div class="chall expert">
+        <span class="idx">08</span>
+        <div class="name">In-Band Sig</div>
+        <div class="diff">EXPERT · CAPSTONE</div>
+        <div class="desc">SF tones, hook flash, switch hook manipulation. Master class.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== KEY FREQUENCIES ===== -->
+  <section class="section">
+    <div class="section-head">
+      <span class="prompt">&gt;</span> THE FREQUENCIES THAT MATTER
+      <span class="rule"></span>
+      <span class="id">[004]</span>
+    </div>
+    <div class="keypad-row" style="display: flex; gap: 20px; flex-wrap: wrap;">
+      <div class="keypad">
+        <div class="keypad-grid">
+          <div class="key">1<span class="freq">700+900</span></div>
+          <div class="key">2<span class="freq">700+1100</span></div>
+          <div class="key">3<span class="freq">900+1100</span></div>
+          <div class="key">4<span class="freq">700+1300</span></div>
+          <div class="key">5<span class="freq">900+1300</span></div>
+          <div class="key">6<span class="freq">1100+1300</span></div>
+          <div class="key">7<span class="freq">700+1500</span></div>
+          <div class="key">8<span class="freq">900+1500</span></div>
+          <div class="key">9<span class="freq">1100+1500</span></div>
+          <div class="key special">KP<span class="freq">1100+1700</span></div>
+          <div class="key">0<span class="freq">1300+1500</span></div>
+          <div class="key special">ST<span class="freq">1500+1700</span></div>
+        </div>
+        <div class="keypad-label">// Bell R1 MF · 2-of-6</div>
+      </div>
+
+      <div class="needs">
+        <h3>// The Critical Tones</h3>
+        <ul>
+          <li><strong>2600 Hz</strong> <em>75 ms single freq</em> — Trunk seizure. The original phreaking weapon.</li>
+          <li><strong>KP / ST</strong> <em>1100+1700 / 1500+1700</em> — Open/close digit register.</li>
+          <li><strong>Coin KP</strong> <em>1700+2200 Hz</em> — PhreakMe payphone variant. CRITICAL.</li>
+          <li><strong>Coin ST</strong> <em>1500+2200 Hz</em> — PhreakMe payphone close.</li>
+          <li><strong>Tolerance</strong> <em>±1.5%</em> — Tighter than DTMF. Use crystal-precise hardware or pinned-CPU sox.</li>
+          <li><strong>Digit timing</strong> <em>55 ms digit, 45 ms gap, 100 ms KP/ST</em></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== WHAT YOU NEED ===== -->
+  <section class="section">
+    <div class="section-head">
+      <span class="prompt">&gt;</span> WHAT YOU NEED
+      <span class="rule"></span>
+      <span class="id">[005]</span>
+    </div>
+    <div class="two-col">
+      <div class="needs">
+        <h3>// Hardware (Tier 1)</h3>
+        <ul>
+          <li><strong>Laptop</strong> — Linux, Asterisk-capable</li>
+          <li><strong>HT813</strong> — FXO/FXS SIP gateway (~$50)</li>
+          <li><strong>USR Sport modem</strong> — hardware-precise tones (~$25 eBay)</li>
+          <li><strong>USB sound card</strong> — line out → phone line via coupler</li>
+          <li><strong>Blue box</strong> — software (sox) or hardware (Arduino Pro Micro)</li>
+          <li><strong>5G hotspot</strong> — DEF CON WiFi WILL kill your VoIP</li>
+          <li><strong>Headphones</strong> — Sony MDR-7506 or similar; you'll be listening for tones for 4 days</li>
+        </ul>
+      </div>
+      <div class="needs">
+        <h3>// Software</h3>
+        <ul>
+          <li><strong>Asterisk 20 LTS</strong> — the PBX you'll use to dial out + record + decode</li>
+          <li><strong>sox + ffmpeg</strong> — precise tone generation</li>
+          <li><strong>ProjectMF2.0</strong> — MF send/receive in Asterisk dialplan</li>
+          <li><strong>SIPVicious + sngrep + Metasploit</strong> — VoIP enumeration & exploitation</li>
+          <li><strong>SyncTERM</strong> — BBS client with ANSI/CP437 + session logging</li>
+          <li><strong>minimodem</strong> — TDD/Bell 202 decode for embedded audio flags</li>
+        </ul>
+      </div>
+    </div>
+    <div class="two-col" style="margin-top: 14px;">
+      <div class="needs">
+        <h3>// Knowledge</h3>
+        <ul>
+          <li><strong>2-of-6 MF table</strong> — internalize the digit pairs (above keypad)</li>
+          <li><strong>Trunk vs. line</strong> — blueboxing attacks trunks, not subscriber lines</li>
+          <li><strong>"Idle line"</strong> — means connected, not silent. Don't repeat Patrick McCanna's mistake.</li>
+          <li><strong>Asterisk dialplan basics</strong> — extensions.conf, contexts, applications</li>
+          <li><strong>BBS navigation</strong> — door games, ANSI art, message boards</li>
+          <li><strong>1996 PhreakTel lore</strong> — the trivia answers are on the website</li>
+        </ul>
+      </div>
+      <div class="needs">
+        <h3>// Prep Resources</h3>
+        <ul>
+          <li><strong>Connections Museum YouTube</strong> — "Trunks Demystified" · "Seizing a Trunk" · "Making the call"</li>
+          <li><strong>Wikipedia: Blue box</strong> — the MF frequency table you'll print and tape above your desk</li>
+          <li><strong>textfiles.com/phreak/BLUEBOXING/</strong> — historical phreaking docs</li>
+          <li><strong>PhreakNet BBS</strong> — <em>ssh bbs.phreaknet.org</em> — practice ground</li>
+          <li><strong>Patrick McCanna's DC33 writeup</strong> — the only public PhreakMe writeup. Read it.</li>
+          <li><strong>This repo</strong> — Appendix H builds the blue box, Appendix I has the 90-day calendar</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== GAME DAY ===== -->
+  <section class="section">
+    <div class="section-head">
+      <span class="prompt">&gt;</span> GAME DAY // PRIORITY ORDER
+      <span class="rule"></span>
+      <span class="id">[006]</span>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <h4>Get the Number</h4>
+        <p>Drops on phreakme.com/directory at contest start. Map the IVR — every prompt, every extension.</p>
+      </div>
+      <div class="step">
+        <h4>Trivia + BBS</h4>
+        <p>1000–1999 = trivia. Easy points. BBS account NOW — BadgeLife is time-gated.</p>
+      </div>
+      <div class="step">
+        <h4>Voicemail (7777)</h4>
+        <p>Default passwords. Mailbox enum. SE the helpdesk (1337) if blocked.</p>
+      </div>
+      <div class="step">
+        <h4>Blueboxing</h4>
+        <p>Trunk seizure once you're warm. Coin KP variant (1700+2200) for payphone challenges.</p>
+      </div>
+      <div class="step">
+        <h4>The Capstone</h4>
+        <p>In-band signaling. Switch hook flash, SF tones, multi-stage chain. Only after the others.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== ENJOYMENT ===== -->
+  <section class="signal-box">
+    <div class="label">// HOW TO ACTUALLY ENJOY IT</div>
+    <p>
+      <strong style="color: var(--green);">Don't try to win.</strong> Try to learn the phone network.
+      The Black Badge is a maybe; the real prize is understanding how 1970s telcos worked from the
+      inside. <strong style="color: var(--cyan);">Bring a team</strong> and split roles
+      (Phone · BBS · Research · Tech). <strong style="color: var(--cyan);">Talk to the organizers</strong>
+      — @HackedExistence and @mainframed767 are accessible on Twitter and appreciate thoughtful
+      contestants. <strong style="color: var(--amber);">Write a post-mortem</strong> when you're
+      done — there's exactly one public PhreakMe writeup; be the second.
+    </p>
+  </section>
+
+  <!-- ===== ASCII ART ===== -->
+  <pre class="phone-art">
+      ┌──────────────────────┐
+      │  ╔══════════════╗    │      ▌ DIAL TONE OK
+      │  ║ PHREAKTEL    ║    │      ▌ TRUNK READY
+      │  ║ EXEC LINE    ║    │      ▌ 2600 ARMED
+      │  ╚══════════════╝    │      ▌ KP COIN $
+      │   ┌───┐┌───┐┌───┐    │      ▌ ST COIN $
+      │   │ 1 ││ 2 ││ 3 │    │      ──────────────
+      │   └───┘└───┘└───┘    │      [ READY ]
+      │   ┌───┐┌───┐┌───┐    │
+      │   │ 4 ││ 5 ││ 6 │    │
+      │   └───┘└───┘└───┘    │      "It's not code.
+      │   ┌───┐┌───┐┌───┐    │       It's analog
+      │   │ 7 ││ 8 ││ 9 │    │       signaling."
+      │   └───┘└───┘└───┘    │
+      │   ┌───┐┌───┐┌───┐    │
+      │   │ * ││ 0 ││ # │    │
+      │   └───┘└───┘└───┘    │
+      └──────────────────────┘
+  </pre>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="footer">
+    <span class="left">
+      // COMPILED BY SHELLDON · MAY 2026 · v10
+    </span>
+    <span class="blink-cursor">
+      PHREAKTEL // EOF
+    </span>
+  </footer>
+</div>
+</body>
+</html>
